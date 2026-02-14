@@ -1,22 +1,32 @@
+// Firebase Configuration
+const FIREBASE_URL = "https://finwise-dad44-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+// Helper to sanitize email for use as a Firebase key (Firebase doesn't allow '.', '#', '$', '[', ']')
+function sanitizeEmail(email) {
+    if (!email) return '';
+    return email.replace(/\./g, ',');
+}
+
 // Google Login Simulation
 function googleLogin(action) {
     alert("Redirecting to Google Authentication...");
     setTimeout(() => {
-        // Simulate successful login/signup with Google
-        const username = localStorage.getItem('finwise_username');
+        const dummyEmail = "user_google@example,com";
+        localStorage.setItem('finwise_session_user', dummyEmail);
 
-        if (action === 'login') {
-            window.location.href = 'index.html';
-        } else if (action === 'signup') {
-            window.location.href = 'profile-setup.html';
-        } else {
-            // Fallback logic
-            if (username) {
-                window.location.href = 'index.html';
-            } else {
-                window.location.href = 'profile-setup.html';
-            }
-        }
+        fetch(`${FIREBASE_URL}/users/${dummyEmail}/profile.json`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.firstName) {
+                    window.location.href = 'index.html';
+                } else {
+                    window.location.href = 'profile-setup.html';
+                }
+            })
+            .catch(error => {
+                console.error("Error checking Google user:", error);
+                window.location.href = 'profile-setup.html'; // Default to setup on error
+            });
     }, 1000);
 }
 
@@ -26,91 +36,164 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupForm = document.getElementById('signupForm');
     const profileForm = document.getElementById('profileForm');
 
+    // Get current session user
+    const sessionUserKey = localStorage.getItem('finwise_session_user');
+
     // Dashboard Logic
-    const headerUsername = document.getElementById('headerUsername'); // Keep for compatibility if used elsewhere
+    const headerUsername = document.getElementById('headerUsername');
     const sidebarUsername = document.getElementById('sidebarUsername');
 
     if (sidebarUsername || headerUsername) {
-        const username = localStorage.getItem('finwise_username');
-        const profileDataStr = localStorage.getItem('finwise_user_profile');
+        if (!sessionUserKey) {
+            if (headerUsername) headerUsername.textContent = "Guest";
+            if (sidebarUsername) sidebarUsername.textContent = "Welcome, Guest";
+        } else {
+            // Fetch User Data from Firebase
+            fetch(`${FIREBASE_URL}/users/${sessionUserKey}/profile.json`)
+                .then(response => response.json())
+                .then(profileData => {
+                    if (profileData) {
+                        const displayName = profileData.firstName || "User";
 
-        const displayName = username || "Guest";
+                        if (headerUsername) headerUsername.textContent = displayName;
+                        if (sidebarUsername) sidebarUsername.textContent = "Welcome, " + displayName;
 
-        if (headerUsername) headerUsername.textContent = displayName;
-        if (sidebarUsername) sidebarUsername.textContent = "Welcome, " + displayName;
+                        localStorage.setItem('finwise_user_profile_cache', JSON.stringify(profileData));
 
-        // Populate Dashboard Cards
-        if (profileDataStr) {
-            const data = JSON.parse(profileDataStr);
-            const income = parseFloat(data.monthlySalary) || 0;
-            const otherIncome = parseFloat(data.otherIncome) || 0;
-            const expenses = parseFloat(data.monthlyExpenses) || 0;
-            const savings = parseFloat(data.totalSavings) || 0;
-            const totalIncome = income + otherIncome;
-            const cashFlow = totalIncome - expenses;
+                        const income = parseFloat(profileData.monthlySalary) || 0;
+                        const otherIncome = parseFloat(profileData.otherIncome) || 0;
+                        const expenses = parseFloat(profileData.monthlyExpenses) || 0;
+                        const savings = parseFloat(profileData.totalSavings) || 0;
+                        const totalIncome = income + otherIncome;
+                        const cashFlow = totalIncome - expenses;
 
-            const formatCurrency = (num) => {
-                return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            };
+                        const formatCurrency = (num) => {
+                            return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
 
-            const displayIncome = document.getElementById('displayIncome');
-            const displayExpenses = document.getElementById('displayExpenses');
-            const displayCashFlow = document.getElementById('displayCashFlow');
-            const displaySavings = document.getElementById('displaySavings');
+                        const displayIncome = document.getElementById('displayIncome');
+                        const displayExpenses = document.getElementById('displayExpenses');
+                        const displayCashFlow = document.getElementById('displayCashFlow');
+                        const displaySavings = document.getElementById('displaySavings');
 
-            if (displayIncome) displayIncome.textContent = formatCurrency(totalIncome);
-            if (displayExpenses) displayExpenses.textContent = formatCurrency(expenses);
-            if (displayCashFlow) {
-                displayCashFlow.textContent = (cashFlow >= 0 ? '+' : '') + formatCurrency(cashFlow);
-                displayCashFlow.style.color = cashFlow >= 0 ? '#10b981' : '#ef4444'; // Green if positive, Red if negative
-            }
-            if (displaySavings) displaySavings.textContent = formatCurrency(savings);
+                        if (displayIncome) displayIncome.textContent = formatCurrency(totalIncome);
+                        if (displayExpenses) displayExpenses.textContent = formatCurrency(expenses);
+                        if (displayCashFlow) {
+                            displayCashFlow.textContent = (cashFlow >= 0 ? '+' : '') + formatCurrency(cashFlow);
+                            displayCashFlow.style.color = cashFlow >= 0 ? '#10b981' : '#ef4444';
+                        }
+                        if (displaySavings) displaySavings.textContent = formatCurrency(savings);
+                    }
+                })
+                .catch(err => console.error("Error fetching dashboard data:", err));
         }
 
-        // Load Recent Transactions
         loadTransactions();
     }
 
-    // Settings Logic
-    const settingsIcon = document.getElementById('settingsIcon');
-    const settingsDropdown = document.getElementById('settingsDropdown');
+    // Settings Toggle Logic
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsSubmenu = document.getElementById('settingsSubmenu');
 
-    if (settingsIcon && settingsDropdown) {
-        settingsIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsDropdown.classList.toggle('active');
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!settingsIcon.contains(e.target) && !settingsDropdown.contains(e.target)) {
-                settingsDropdown.classList.remove('active');
+    if (settingsToggle && settingsSubmenu) {
+        settingsToggle.addEventListener('click', () => {
+            settingsSubmenu.classList.toggle('open');
+            const icon = settingsToggle.querySelector('.fa-chevron-down');
+            if (icon) {
+                icon.classList.toggle('rotate-icon');
             }
         });
     }
 
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const settingsIcon = document.getElementById('settingsIcon');
+        const settingsDropdown = document.getElementById('settingsDropdown');
+        if (settingsIcon && settingsDropdown) {
+            if (!settingsIcon.contains(e.target) && !settingsDropdown.contains(e.target)) {
+                settingsDropdown.classList.remove('active');
+            }
+        }
+    });
+
+
+    // LOGIN FORM
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            localStorage.setItem('finwise_user_email', email);
-            window.location.href = 'index.html';
+            const userKey = sanitizeEmail(email);
+
+            fetch(`${FIREBASE_URL}/users/${userKey}.json`)
+                .then(response => response.json())
+                .then(userData => {
+                    if (userData) {
+                        localStorage.setItem('finwise_session_user', userKey);
+                        window.location.href = 'index.html';
+                    } else {
+                        alert("User not found. Please sign up.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Login Error:", error);
+                    alert("An error occurred during login.");
+                });
         });
     }
 
+    // SIGNUP FORM
     if (signupForm) {
         signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            localStorage.setItem('finwise_user_email', email);
-            alert("Account created successfully!");
-            window.location.href = 'profile-setup.html';
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            const userKey = sanitizeEmail(email);
+
+            fetch(`${FIREBASE_URL}/users/${userKey}.json`)
+                .then(response => response.json())
+                .then(existingUser => {
+                    if (existingUser) {
+                        alert("User already exists. Please login.");
+                        window.location.href = 'login.html';
+                    } else {
+                        const newUser = {
+                            email: email,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        fetch(`${FIREBASE_URL}/users/${userKey}.json`, {
+                            method: 'PUT',
+                            body: JSON.stringify(newUser)
+                        })
+                            .then(() => {
+                                localStorage.setItem('finwise_session_user', userKey);
+                                alert("Account created successfully!");
+                                window.location.href = 'profile-setup.html';
+                            });
+                    }
+                })
+                .catch(error => console.error("Signup Error:", error));
         });
     }
 
+    // PROFILE FORM
     if (profileForm) {
         profileForm.addEventListener('submit', (e) => {
             e.preventDefault();
+
+            const userKey = localStorage.getItem('finwise_session_user');
+            if (!userKey) {
+                alert("No active session. Please login again.");
+                window.location.href = 'login.html';
+                return;
+            }
 
             const profileData = {
                 firstName: document.getElementById('firstName').value,
@@ -123,27 +206,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 monthlyExpenses: document.getElementById('monthlyExpenses').value
             };
 
-            localStorage.setItem('finwise_user_profile', JSON.stringify(profileData));
-            localStorage.setItem('finwise_username', profileData.firstName);
-
-            alert("Profile setup complete! Welcome, " + profileData.firstName);
-            window.location.href = 'index.html';
+            fetch(`${FIREBASE_URL}/users/${userKey}/profile.json`, {
+                method: 'PUT',
+                body: JSON.stringify(profileData)
+            })
+                .then(() => {
+                    localStorage.setItem('finwise_user_profile_cache', JSON.stringify(profileData));
+                    alert("Profile setup complete! Welcome, " + profileData.firstName);
+                    window.location.href = 'index.html';
+                })
+                .catch(error => {
+                    console.error("Profile Save Error:", error);
+                    alert("Failed to save profile. Try again.");
+                });
         });
     }
 });
 
 function logout() {
-    localStorage.removeItem('finwise_username');
-    localStorage.removeItem('finwise_user_email');
-    localStorage.removeItem('finwise_user_profile');
+    localStorage.removeItem('finwise_session_user');
+    localStorage.removeItem('finwise_user_profile_cache');
     window.location.href = 'login.html';
 }
 
-// Profile Modal Logic
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
     const profileDetails = document.getElementById('profileDetails');
-    const profileDataStr = localStorage.getItem('finwise_user_profile');
+    const profileDataStr = localStorage.getItem('finwise_user_profile_cache');
 
     if (modal) {
         modal.classList.add('active');
@@ -173,10 +262,24 @@ function openProfileModal() {
                 </div>
             `;
         } else {
-            profileDetails.innerHTML = '<p style="text-align: center; color: #666;">No profile data found. Please complete profile setup.</p>';
+            profileDetails.innerHTML = '<p style="text-align: center; color: #666;">Loading profile...</p>';
+
+            const userKey = localStorage.getItem('finwise_session_user');
+            if (userKey) {
+                fetch(`${FIREBASE_URL}/users/${userKey}/profile.json`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data) {
+                            localStorage.setItem('finwise_user_profile_cache', JSON.stringify(data));
+                            modal.classList.remove('active');
+                            setTimeout(openProfileModal, 100);
+                        } else {
+                            profileDetails.innerHTML = '<p style="text-align: center; color: #666;">No profile data found.</p>';
+                        }
+                    });
+            }
         }
 
-        // Close when clicking outside content
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 closeProfileModal();
@@ -185,9 +288,13 @@ function openProfileModal() {
     }
 }
 
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
 
-
-// Helper to load dummy transactions
 function loadTransactions() {
     const transactionList = document.getElementById('transactionList');
     if (transactionList) {
@@ -230,19 +337,3 @@ function loadTransactions() {
         transactionList.innerHTML = html;
     }
 }
-
-// Settings Toggle Logic
-document.addEventListener('DOMContentLoaded', () => {
-    const settingsToggle = document.getElementById('settingsToggle');
-    const settingsSubmenu = document.getElementById('settingsSubmenu');
-
-    if (settingsToggle && settingsSubmenu) {
-        settingsToggle.addEventListener('click', () => {
-            settingsSubmenu.classList.toggle('open');
-            const icon = settingsToggle.querySelector('.fa-chevron-down');
-            if (icon) {
-                icon.classList.toggle('rotate-icon');
-            }
-        });
-    }
-});
