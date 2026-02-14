@@ -230,3 +230,19 @@ function loadTransactions() {
         transactionList.innerHTML = html;
     }
 }
+
+// Settings Toggle Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsSubmenu = document.getElementById('settingsSubmenu');
+
+    if (settingsToggle && settingsSubmenu) {
+        settingsToggle.addEventListener('click', () => {
+            settingsSubmenu.classList.toggle('open');
+            const icon = settingsToggle.querySelector('.fa-chevron-down');
+            if (icon) {
+                icon.classList.toggle('rotate-icon');
+            }
+        });
+    }
+});

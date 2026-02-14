@@ -656,6 +656,47 @@ body {
     color: white;
 }
 
+/* Settings Submenu Styling */
+.nav-submenu {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+    display: none;
+    /* Hidden by default */
+    flex-direction: column;
+    gap: 5px;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Forcing display flex when open */
+.nav-submenu.open {
+    display: flex !important;
+}
+
+.nav-sub-item {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.nav-sub-item:hover {
+    color: var(--primary-color);
+    background: #f0f5fa;
+    padding-left: 20px;
+    /* Slight shift on hover */
+}
+
+.rotate-icon {
+    transform: rotate(180deg);
+    transition: transform 0.3s;
+}
+
 .pro-tip {
     background: #eef2f6;
     /* Very light grey/blue */
