@@ -1,11 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<title>FinWise | Goal-Based Savings</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #061C3F, #0B4F9C);
+}
+
+.dashboard {
+    max-width: 1200px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    color: #0B4F9C;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+/* GOALS */
+.goal {
+    margin-bottom: 22px;
+}
+
+.goal-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 0.8fr 0.8fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.goal-row input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    font-size: 13px;
+}
+
+.goal-name {
+    font-weight: 600;
+}
+
+/* PROGRESS */
+.progress-bar {
+    background: #E2E8F0;
+    border-radius: 20px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 14px;
+    border-radius: 20px;
+    transition: width 0.4s ease;
+}
+
+/* TEXT */
+.small {
+    font-size: 12px;
+    color: #475569;
+    margin-top: 4px;
+}
+
+/* BUTTON */
+button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #0B4F9C;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* PIE */
+.pie-box {
+    text-align: center;
+}
+</style>
 </head>
+
 <body>
-    Hii
+
+<div class="dashboard">
+
+    <div class="header">
+        <h2>🎯 Goal-Based Savings</h2>
+        <button onclick="addGoal()">➕ Add New Goal</button>
+    </div>
+
+    <div class="content">
+
+        <!-- GOALS -->
+        <div id="goals"></div>
+
+        <!-- PIE -->
+        <div class="pie-box">
+            <h3>Planned Savings Allocation</h3>
+            <canvas id="pie" width="220" height="220"></canvas>
+            <p class="small">Based on target amounts</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const goalsDiv = document.getElementById("goals");
+const colors = ["#0B4F9C","#22C55E","#C084FC","#F59E0B","#EF4444","#14B8A6"];
+let goals = [];
+
+function addGoal(name = "Laptop") {
+    const index = goals.length;
+    goals.push({ target: 0, saved: 0, months: 0 });
+
+    const color = colors[index % colors.length];
+
+    goalsDiv.insertAdjacentHTML("beforeend", `
+        <div class="goal">
+            <div class="goal-row">
+                <input class="goal-name" value="${name}">
+                <input type="number" placeholder="Target ₹" oninput="updateGoal(${index})">
+                <input type="number" placeholder="Saved ₹" oninput="updateGoal(${index})">
+                <input type="number" placeholder="Months" oninput="updateGoal(${index})">
+                <span id="percent${index}">0%</span>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress" id="bar${index}" style="background:${color}"></div>
+            </div>
+
+            <div class="small" id="monthly${index}">
+                Monthly saving required: ₹0
+            </div>
+        </div>
+    `);
+}
+
+function updateGoal(i) {
+    const goal = goalsDiv.children[i];
+    const inputs = goal.querySelectorAll("input");
+
+    const target = Number(inputs[1].value);
+    const saved = Number(inputs[2].value);
+    const months = Number(inputs[3].value);
+
+    goals[i] = { target, saved, months };
+
+    // Progress
+    let percent = target ? Math.min((saved / target) * 100, 100) : 0;
+    document.getElementById("percent"+i).innerText = Math.round(percent) + "%";
+    document.getElementById("bar"+i).style.width = percent + "%";
+
+    // Monthly calculation
+    let remaining = Math.max(target - saved, 0);
+    let monthly = months ? remaining / months : 0;
+
+    document.getElementById("monthly"+i).innerText =
+        `Monthly saving required: ₹${monthly.toFixed(0)}`;
+
+    drawPie();
+}
+
+function drawPie() {
+    const canvas = document.getElementById("pie");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,220,220);
+
+    const values = goals.map(g => g.target);
+    const total = values.reduce((a,b)=>a+b,0);
+    let angle = 0;
+
+    values.forEach((v,i) => {
+        if(total === 0 || v === 0) return;
+        let slice = (v / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(110,110);
+        ctx.arc(110,110,100,angle,angle+slice);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        angle += slice;
+    });
+}
+
+/* DEFAULT GOALS */
+addGoal("Laptop");
+addGoal("Buy a Car");
+</script>
+
 </body>
 </html>
