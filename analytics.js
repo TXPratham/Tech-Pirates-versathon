@@ -1,177 +1,230 @@
-// Simulated analytics data (in real app, fetch from localStorage/database)
-class TaxWiseAnalytics {
-    constructor() {
-        this.data = this.generateSampleData();
-        this.initializeDashboard();
+// Mock Data
+const allTimeData = {
+    totalIncome: 123500, // Scaled up for all time
+    totalExpenses: 55299.99,
+    netSavings: 68200.01,
+    topCategory: "Housing",
+    topCategorySpent: 36000,
+    savingsRate: 55.2,
+    spendingCategories: [
+        { name: 'Housing', value: 36000, color: '#3b82f6' },
+        { name: 'Groceries', value: 6000, color: '#10b981' },
+        { name: 'Other', value: 4500, color: '#f59e0b' },
+        { name: 'Insurance', value: 3000, color: '#ef4444' },
+        { name: 'Utilities', value: 2500, color: '#8b5cf6' },
+        { name: 'Education', value: 2000, color: '#06b6d4' },
+        { name: 'Dining', value: 1000, color: '#ec4899' },
+        { name: 'Transportation', value: 500, color: '#84cc16' }
+    ],
+    trend: {
+        labels: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+        income: [15000, 18000, 16000, 20000, 22000, 32500],
+        expenses: [8000, 9000, 8500, 10000, 12000, 7800]
     }
+};
 
-    generateSampleData() {
-        return {
-            calculations: 1247,
-            incomes: [850000, 1200000, 1800000, 950000, 2200000, 750000, 1500000, 3200000],
-            regimes: { new: 0.68, old: 0.32 },
-            professions: { 
-                salaried: 0.52, 
-                freelancer: 0.22, 
-                business: 0.18, 
-                farmer: 0.08 
-            },
-            states: { 
-                karnataka: 0.35, 
-                maharashtra: 0.25, 
-                delhi: 0.18, 
-                gujarat: 0.12, 
-                tamilnadu: 0.10 
-            },
-            incomeBrackets: {
-                '0-5L': 320,
-                '5-10L': 456,
-                '10-20L': 289,
-                '20-50L': 142,
-                '50L+': 40
-            },
-            avgIncome: 1450000,
-            avgTax: 185000
-        };
+const monthlyData = {
+    totalIncome: 12350,
+    totalExpenses: 5529.99,
+    netSavings: 6820.01,
+    topCategory: "Housing",
+    topCategorySpent: 3600,
+    savingsRate: 55.2,
+    spendingCategories: [
+        { name: 'Housing', value: 3600, color: '#3b82f6' },
+        { name: 'Groceries', value: 600, color: '#10b981' },
+        { name: 'Other', value: 450, color: '#f59e0b' },
+        { name: 'Insurance', value: 300, color: '#ef4444' },
+        { name: 'Utilities', value: 250, color: '#8b5cf6' },
+        { name: 'Education', value: 200, color: '#06b6d4' },
+        { name: 'Dining', value: 100, color: '#ec4899' },
+        { name: 'Transportation', value: 50, color: '#84cc16' }
+    ],
+    trend: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        income: [3000, 3200, 2900, 3250],
+        expenses: [1200, 1500, 1000, 1830]
     }
+};
 
-    initializeDashboard() {
-        this.updateStats();
-        this.renderCharts();
-        this.updateIncomeTable();
-        this.updateMetrics();
-        
-        // Simulate live updates
-        setInterval(() => {
-            this.simulateLiveUpdate();
-        }, 10000);
-    }
+let currentData = allTimeData;
+let trendChartInstance = null;
+let categoryChartInstance = null;
 
-    updateStats() {
-        document.getElementById('totalCalculations').textContent = 
-            this.data.calculations.toLocaleString();
-        document.getElementById('avgIncome').textContent = 
-            `₹${(this.data.avgIncome/1000).toLocaleString()}K`;
-        document.getElementById('avgTax').textContent = 
-            `₹${(this.data.avgTax/1000).toLocaleString()}K`;
-        document.getElementById('topRegime').textContent = 
-            Object.keys(this.data.regimes).reduce((a, b) => 
-                this.data.regimes[a] > this.data.regimes[b] ? a : b
-            ).toUpperCase();
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial Render
+    renderStats();
+    renderTrendChart();
+    renderCategoryChart();
 
-    renderCharts() {
-        // Income Distribution (Histogram)
-        new Chart(document.getElementById('incomeChart'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(this.data.incomeBrackets),
-                datasets: [{
-                    label: 'Calculations',
-                    data: Object.values(this.data.incomeBrackets),
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
+    // Toggle Logic
+    const dateFilter = document.querySelector('.date-filter');
+    const dateText = dateFilter.querySelector('span');
 
-        // Tax Regime Pie
-        new Chart(document.getElementById('regimeChart'), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(this.data.regimes),
-                datasets: [{
-                    data: Object.values(this.data.regimes).map(v => v * 100),
-                    backgroundColor: ['#1d4ed8', '#3b82f6']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
+    dateFilter.addEventListener('click', () => {
+        if (dateText.innerText === 'All time') {
+            dateText.innerText = 'This Month';
+            currentData = monthlyData;
+        } else {
+            dateText.innerText = 'All time';
+            currentData = allTimeData;
+        }
 
-        // Profession Breakdown
-        new Chart(document.getElementById('professionChart'), {
-            type: 'pie',
-            data: {
-                labels: Object.keys(this.data.professions),
-                datasets: [{
-                    data: Object.values(this.data.professions).map(v => v * 100),
-                    backgroundColor: ['#1e3a8a', '#1d4ed8', '#3b82f6', '#60a5fa']
-                }]
-            },
-            options: { responsive: true }
-        });
+        // Update UI
+        updateAll();
+    });
+});
 
-        // State Distribution
-        new Chart(document.getElementById('stateChart'), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(this.data.states),
-                datasets: [{
-                    data: Object.values(this.data.states).map(v => v * 100),
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-    }
+function updateAll() {
+    renderStats();
 
-    updateIncomeTable() {
-        const tbody = document.getElementById('incomeTable');
-        tbody.innerHTML = '';
-        
-        Object.entries(this.data.incomeBrackets).forEach(([range, count]) => {
-            const row = tbody.insertRow();
-            const total = this.data.calculations;
-            const avgTax = Math.round(this.data.avgTax * (count / total) * 100) / 100;
-            row.innerHTML = `
-                <td>${range}</td>
-                <td>${count.toLocaleString()}</td>
-                <td>₹${avgTax.toLocaleString()}</td>
-                <td>${((count/total)*100).toFixed(1)}%</td>
-            `;
-        });
-    }
+    // Destroy and Re-render Charts to animate changes
+    if (trendChartInstance) trendChartInstance.destroy();
+    if (categoryChartInstance) categoryChartInstance.destroy();
 
-    updateMetrics() {
-        const metricsList = document.getElementById('metricsList');
-        metricsList.innerHTML = `
-            <div class="metric-item">
-                <div class="metric-value">${((this.data.regimes.new)*100).toFixed(1)}%</div>
-                <div class="metric-label">New Regime Preference</div>
-            </div>
-            <div class="metric-item">
-                <div class="metric-value">₹${(this.data.avgIncome/12000).toFixed(0)}K</div>
-                <div class="metric-label">Monthly Avg Take-home</div>
-            </div>
-            <div class="metric-item">
-                <div class="metric-value">${this.data.professions.farmer*100}%</div>
-                <div class="metric-label">Farmer Usage</div>
-            </div>
-            <div class="metric-item">
-                <div class="metric-value">${(this.data.avgTax/this.data.avgIncome*100).toFixed(1)}%</div>
-                <div class="metric-label">Effective Tax Rate</div>
-            </div>
-        `;
-    }
-
-    simulateLiveUpdate() {
-        this.data.calculations += Math.floor(Math.random() * 5) + 1;
-        this.data.avgIncome += (Math.random() - 0.5) * 50000;
-        this.updateStats();
-    }
+    renderTrendChart();
+    renderCategoryChart();
 }
 
-// Initialize analytics dashboard
-document.addEventListener('DOMContentLoaded', () => {
-    new TaxWiseAnalytics();
-});
+function formatCurrency(amount) {
+    return '₹' + amount.toLocaleString('en-IN');
+}
+
+function renderStats() {
+    animateValue(document.getElementById('totalIncome'), 0, currentData.totalIncome, 500, '₹');
+    animateValue(document.getElementById('totalExpenses'), 0, currentData.totalExpenses, 500, '₹');
+    animateValue(document.getElementById('netSavings'), 0, currentData.netSavings, 500, '₹');
+
+    document.getElementById('savingsRate').innerText = `${currentData.savingsRate}% savings rate`;
+    document.getElementById('topCategory').innerText = currentData.topCategory;
+    document.getElementById('topCategoryAmount').innerText = `${formatCurrency(currentData.topCategorySpent)} spent`;
+}
+
+function animateValue(obj, start, end, duration, prefix = '') {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        obj.innerHTML = prefix + value.toLocaleString('en-IN');
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+}
+
+// Trend Chart
+function renderTrendChart() {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+
+    // Gradient for Income
+    const gradientIncome = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientIncome.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); // Green
+    gradientIncome.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+    // Gradient for Expenses
+    const gradientExpenses = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientExpenses.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); // Red
+    gradientExpenses.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+    trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: currentData.trend.labels,
+            datasets: [
+                {
+                    label: 'Income',
+                    data: currentData.trend.income,
+                    borderColor: '#10b981',
+                    backgroundColor: gradientIncome,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'Expenses',
+                    data: currentData.trend.expenses,
+                    borderColor: '#ef4444',
+                    backgroundColor: gradientExpenses,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20 }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { borderDash: [5, 5], color: '#f1f5f9' },
+                    ticks: { callback: (value) => '₹' + (value / 1000) + 'k' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+}
+
+// Category Chart
+function renderCategoryChart() {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    const total = currentData.spendingCategories.reduce((a, b) => a + b.value, 0);
+
+    categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: currentData.spendingCategories.map(c => c.name),
+            datasets: [{
+                data: currentData.spendingCategories.map(c => c.value),
+                backgroundColor: currentData.spendingCategories.map(c => c.color),
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Custom Legend
+    const legendContainer = document.getElementById('categoryLegend');
+    legendContainer.innerHTML = ''; // Clear previous
+    currentData.spendingCategories.forEach(cat => {
+        const percent = total > 0 ? ((cat.value / total) * 100).toFixed(0) : 0;
+        legendContainer.innerHTML += `
+            <div class="legend-item">
+                <div class="color-box" style="background: ${cat.color}"></div>
+                <span>${cat.name} <span class="legend-percent">(${percent}%)</span></span>
+            </div>
+        `;
+    });
+}
