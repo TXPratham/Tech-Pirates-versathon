@@ -1,30 +1,59 @@
-# Tech Pirates Versathon - Fintech Login System
+# Tech Pirates Versathon - FinWise Financial Dashboard
 
-This project implements a fully functional login and signup flow with a fintech theme.
+A comprehensive personal finance management application built for the Tech Pirates Versathon. FinWise helps users track their income, expenses, savings goals, and budgets with a clean, modern interface.
 
 ## Features
 
-- **Login Page**: Email/Password login and Google Login simulation.
-- **Signup Page**: Account creation with email/password and Google Signup simulation.
-- **Profile Setup**: A dedicated page for new users to set their username.
-- **Dashboard**: A simple landing page after successful login/signup.
-- **Responsive Design**: Works on mobile and desktop.
-- **Fintech Theme**: Professional blue and white color scheme.
+- **Authentication**: Secure Email/Password login and signup flow powered by Firebase.
+- **Dashboard**: Real-time overview of your financial health, including total income, expenses, cash flow, and savings.
+- **Transactions**: Add, edit, and delete income and expense transactions. Filter by category, type, or month.
+- **Analytics**: Visual charts (Trend Lines and Donut Charts) to analyze spending habits and financial trends over time.
+- **Savings Goals**: Set specific financial goals (e.g., "Buy a Car", "Emergency Fund") and track progress with visual progress bars.
+- **Budgeting**: specific monthly budgets for different categories (e.g., Groceries, Housing) and monitor spending against limits.
+- **Profile Management**: Update your financial profile, including salary, job title, and company details.
+- **Responsive Design**: Fully responsive interface that works seamlessly on desktop and mobile devices.
+- **Data Persistence**: Uses Firebase Realtime Database for secure cloud storage and LocalStorage for efficient session management.
+
+## Tech Stack
+
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Backend/Database**: Firebase Realtime Database
+- **Authentication**: Custom implementation using Firebase Realtime Database (simulated auth for hackathon context)
+- **Charts**: Chart.js for data visualization
+- **Icons**: FontAwesome
 
 ## How to Run
 
-1. Open `login.html` in your web browser.
-2. You can try logging in with any email (simulation).
-3. Or click "Sign Up" to create a new account.
-4. Or use the "Continue with Google" button.
-5. After login/signup, you will be directed to the Profile Setup page if it's your first time (simulated logic based on LocalStorage).
-6. Once your username is set, you will be redirected to the Dashboard.
+1. **Clone the Repository**:
+   ```bash
+   git clone <repository-url>
+   ```
+2. **Open the Application**:
+   - Open `index.html` in your web browser.
+   - You will be automatically redirected to `login.html` if you are not logged in.
+3. **Sign Up**:
+   - Create a new account on the Signup page.
+   - Complete your profile setup on the redirected page.
+   - **Note:** Demo/Dummy data has been removed. You will start with a fresh, empty dashboard.
+4. **Explore**:
+   - Add transactions, set goals, and create budgets to see the dashboard come to life!
 
-## Files
+## File Structure
 
-- `login.html`: Login interface.
-- `signup.html`: Registration interface.
-- `profile-setup.html`: Username entry page.
-- `index.html`: Main landing page (Work in Progress).
-- `style.css`: Main stylesheet.
-- `script.js`: Logic for form handling and navigation.
+- `index.html`: Main dashboard.
+- `login.html` / `signup.html`: Authentication pages.
+- `profile-setup.html`: Initial user profile configuration.
+- `goals.html`: Savings goals management.
+- `budget.html`: Monthly budgeting tool.
+- `analytics.html`: Financial charts and reports.
+- `settings.html`: User settings and profile updates.
+- `script.js`: Core application logic and Firebase integration.
+- `goal.js`, `budget.js`, `trans.js`, `analytics.js`: specific logic for respective features.
+- `styles/`: Contains all CSS files for styling.
+
+## Configuration
+
+To connect to your own Firebase project, update the `firebaseConfig` object in `script.js` with your project's API keys.
+
+---
+*Built by Team Tech Pirates*

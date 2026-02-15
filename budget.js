@@ -52,12 +52,9 @@ function loadBudgets() {
         budgets = JSON.parse(stored);
     } else {
         // Default dummy data if empty
-        budgets = [
-            { id: 1, category: 'Housing', limit: 1900, spent: 1800, month: currentMonth },
-            { id: 2, category: 'Groceries', limit: 400, spent: 320, month: currentMonth },
-            { id: 3, category: 'Transportation', limit: 300, spent: 150, month: currentMonth },
-            { id: 4, category: 'Dining', limit: 200, spent: 180, month: currentMonth }
-        ];
+        // No dummy data for new users
+        budgets = [];
+
         saveBudgets();
     }
 }

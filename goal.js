@@ -187,8 +187,8 @@ function loadGoalsFromStorage() {
         });
     } else {
         // Default goals if nothing in storage
-        createGoal("Laptop", 80000, 20000, 6, "#0B4F9C", "fas fa-laptop");
-        createGoal("Buy a Car", 1500000, 500000, 24, "#22C55E", "fas fa-car");
+        // No default goals for new users
+
     }
 }
 

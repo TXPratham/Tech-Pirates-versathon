@@ -1,49 +1,32 @@
 // Mock Data
+// Mock Data - Reset to empty for new users
 const allTimeData = {
-    totalIncome: 123500, // Scaled up for all time
-    totalExpenses: 55299.99,
-    netSavings: 68200.01,
-    topCategory: "Housing",
-    topCategorySpent: 36000,
-    savingsRate: 55.2,
-    spendingCategories: [
-        { name: 'Housing', value: 36000, color: '#3b82f6' },
-        { name: 'Groceries', value: 6000, color: '#10b981' },
-        { name: 'Other', value: 4500, color: '#f59e0b' },
-        { name: 'Insurance', value: 3000, color: '#ef4444' },
-        { name: 'Utilities', value: 2500, color: '#8b5cf6' },
-        { name: 'Education', value: 2000, color: '#06b6d4' },
-        { name: 'Dining', value: 1000, color: '#ec4899' },
-        { name: 'Transportation', value: 500, color: '#84cc16' }
-    ],
+    totalIncome: 0,
+    totalExpenses: 0,
+    netSavings: 0,
+    topCategory: "None",
+    topCategorySpent: 0,
+    savingsRate: 0,
+    spendingCategories: [],
     trend: {
-        labels: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
-        income: [15000, 18000, 16000, 20000, 22000, 32500],
-        expenses: [8000, 9000, 8500, 10000, 12000, 7800]
+        labels: [],
+        income: [],
+        expenses: []
     }
 };
 
 const monthlyData = {
-    totalIncome: 12350,
-    totalExpenses: 5529.99,
-    netSavings: 6820.01,
-    topCategory: "Housing",
-    topCategorySpent: 3600,
-    savingsRate: 55.2,
-    spendingCategories: [
-        { name: 'Housing', value: 3600, color: '#3b82f6' },
-        { name: 'Groceries', value: 600, color: '#10b981' },
-        { name: 'Other', value: 450, color: '#f59e0b' },
-        { name: 'Insurance', value: 300, color: '#ef4444' },
-        { name: 'Utilities', value: 250, color: '#8b5cf6' },
-        { name: 'Education', value: 200, color: '#06b6d4' },
-        { name: 'Dining', value: 100, color: '#ec4899' },
-        { name: 'Transportation', value: 50, color: '#84cc16' }
-    ],
+    totalIncome: 0,
+    totalExpenses: 0,
+    netSavings: 0,
+    topCategory: "None",
+    topCategorySpent: 0,
+    savingsRate: 0,
+    spendingCategories: [],
     trend: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-        income: [3000, 3200, 2900, 3250],
-        expenses: [1200, 1500, 1000, 1830]
+        labels: [],
+        income: [],
+        expenses: []
     }
 };
 

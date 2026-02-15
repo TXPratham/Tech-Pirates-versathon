@@ -22,6 +22,19 @@ function sanitizeEmail(email) {
     return email.replace(/\./g, ',');
 }
 
+// FORCE LOGIN REDIRECT (Immediate Global Check)
+(function () {
+    const sessionUserKey = localStorage.getItem('finwise_session_user');
+    const path = window.location.pathname;
+    const isPublicPage = path.toLowerCase().includes('login.html') || path.toLowerCase().includes('signup.html');
+
+    if (!isPublicPage && !sessionUserKey) {
+        if (document.body) document.body.style.display = 'none';
+        window.location.href = 'login.html';
+        throw new Error("Redirecting to login...");
+    }
+})();
+
 // Handle Forms
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
@@ -32,24 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get current session user
     const sessionUserKey = localStorage.getItem('finwise_session_user');
 
-    // FORCE LOGIN REDIRECT
-    // If we are on a protected page (not login or signup) and no user is logged in, redirect to login.html
-    const path = window.location.pathname;
-    const isPublicPage = path.includes('login.html') || path.includes('signup.html');
-
-    if (!isPublicPage && !sessionUserKey) {
-        window.location.href = 'login.html';
-        return; // Stop further execution
-    }
-
     // Dashboard Logic
     const headerUsername = document.getElementById('headerUsername');
     const sidebarUsername = document.getElementById('sidebarUsername');
 
     if (sidebarUsername || headerUsername) {
         if (!sessionUserKey) {
-            // This block effectively won't run for unauthorized users due to the redirect above, 
-            // but good for safety.
             if (headerUsername) headerUsername.textContent = "Guest";
             if (sidebarUsername) sidebarUsername.textContent = "Welcome, Guest";
         } else {
@@ -407,14 +408,8 @@ function loadTransactions() {
             // Sort by date descending (newest first)
             transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
         } else {
-            // Dummy Data Fallback for Demo
-            transactions = [
-                { id: 1, name: "Grocery Store", category: "Food & Dining", date: "Today", amount: 1200.50, type: "expense" },
-                { id: 2, name: "Salary Deposit", category: "Income", date: "Yesterday", amount: 50000.00, type: "income" },
-                { id: 3, name: "Electric Bill", category: "Utilities", date: "Feb 14", amount: 8500.00, type: "expense" },
-                { id: 4, name: "Freelance Project", category: "Income", date: "Feb 12", amount: 15000.00, type: "income" },
-                { id: 5, name: "Netflix Subscription", category: "Entertainment", date: "Feb 10", amount: 499.00, type: "expense" }
-            ];
+            // No dummy data for new users
+            transactions = [];
         }
 
         // Limit to 5
