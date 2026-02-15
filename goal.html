@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FinWise | Goal-Based Savings</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="goal.css">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <div class="header">
+        <h2>🎯 Goal-Based Savings</h2>
+        <button onclick="addGoal()">➕ Add New Goal</button>
+    </div>
+
+    <div class="content">
+
+        <!-- GOALS -->
+        <div id="goals"></div>
+
+        <!-- PIE -->
+        <div class="pie-box">
+            <h3>Planned Savings Allocation</h3>
+            <canvas id="pie" width="220" height="220"></canvas>
+            <p class="small">Based on target amounts</p>
+        </div>
+
+    </div>
+</div>
+
+<script src="goal.js"></script>
+</body>
+</html>
