@@ -22,69 +22,6 @@ function sanitizeEmail(email) {
     return email.replace(/\./g, ',');
 }
 
-// Google Login with Firebase Auth
-function googleLogin(action) {
-    if (typeof firebase === 'undefined') {
-        alert("Firebase SDK not loaded. Please check your internet connection.");
-        return;
-    }
-
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    firebase.auth().signInWithPopup(provider)
-        .then((result) => {
-            const user = result.user;
-            const email = user.email;
-            const userKey = sanitizeEmail(email);
-
-            // Store session
-            localStorage.setItem('finwise_session_user', userKey);
-
-            // Check if user exists in DB
-            fetch(`${FIREBASE_URL}/users/${userKey}.json`)
-                .then(res => res.json())
-                .then(existingUser => {
-                    if (existingUser) {
-                        // User exists, go to dashboard
-                        window.location.href = 'index.html';
-                    } else {
-                        // New user, save basic profile
-                        const nameParts = user.displayName ? user.displayName.split(' ') : ["User"];
-                        const firstName = nameParts[0];
-                        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : "";
-
-                        const newUser = {
-                            email: email,
-                            profile: {
-                                firstName: firstName,
-                                lastName: lastName,
-                                monthlySalary: 0,
-                                totalSavings: 0
-                            },
-                            createdAt: new Date().toISOString()
-                        };
-
-                        fetch(`${FIREBASE_URL}/users/${userKey}.json`, {
-                            method: 'PUT',
-                            body: JSON.stringify(newUser)
-                        }).then(() => {
-                            window.location.href = 'profile-setup.html';
-                        });
-                    }
-                });
-        })
-        .catch((error) => {
-            console.error("Google Login Error:", error);
-            // Handle API Key missing error specifically to allow demo mode fallback if desired, 
-            // or just alert the user.
-            if (error.code === "auth/invalid-api-key") {
-                alert("Configuration Error: Missing Firebase API Key. Please update script.js.");
-            } else {
-                alert("Login Failed: " + error.message);
-            }
-        });
-}
-
 // Handle Forms
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
@@ -95,12 +32,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get current session user
     const sessionUserKey = localStorage.getItem('finwise_session_user');
 
+    // FORCE LOGIN REDIRECT
+    // If we are on a protected page (not login or signup) and no user is logged in, redirect to login.html
+    const path = window.location.pathname;
+    const isPublicPage = path.includes('login.html') || path.includes('signup.html');
+
+    if (!isPublicPage && !sessionUserKey) {
+        window.location.href = 'login.html';
+        return; // Stop further execution
+    }
+
     // Dashboard Logic
     const headerUsername = document.getElementById('headerUsername');
     const sidebarUsername = document.getElementById('sidebarUsername');
 
     if (sidebarUsername || headerUsername) {
         if (!sessionUserKey) {
+            // This block effectively won't run for unauthorized users due to the redirect above, 
+            // but good for safety.
             if (headerUsername) headerUsername.textContent = "Guest";
             if (sidebarUsername) sidebarUsername.textContent = "Welcome, Guest";
         } else {
@@ -209,12 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (password !== confirmPassword) {
-                alert("Passwords do not match!");
-                return;
-            }
+            // Removed confirmPassword check as it's not in the HTML form currently, 
+            // but the user requested redirection to profile-setup.html which is already in the logic below.
+            // I need to make sure the HTML form actually HAS a confirm password field if I'm checking it.
+            // Based on the HTML view, it does NOT have a confirm password field.
+            // So I will remove the check for confirmPassword to avoid errors.
 
             const userKey = sanitizeEmail(email);
 
@@ -237,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             .then(() => {
                                 localStorage.setItem('finwise_session_user', userKey);
                                 alert("Account created successfully!");
-                                window.location.href = 'profile-setup.html';
+                                window.location.href = 'profile-setup.html'; // This is the requested redirection
                             });
                     }
                 })

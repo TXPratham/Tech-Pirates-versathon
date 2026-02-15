@@ -207,10 +207,13 @@ function createGoal(name, target, saved, months, color, iconClass) {
                 <div style="width:40px; height:40px; background:${color}20; border-radius:10px; display:flex; align-items:center; justify-content:center; color:${color}; font-size:18px;">
                     <i class="${iconClass}"></i>
                 </div>
-                <div>
+                <div style="flex: 1;">
                     <h3 style="margin:0; font-size:16px; color:#1e293b;">${name}</h3>
                     <div style="font-size:11px; color:#64748b;">Target: ₹${target.toLocaleString()}</div>
                 </div>
+                <button onclick="deleteGoal(${index})" style="background:transparent; color:#EF4444; border:none; cursor:pointer; padding:5px;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
             
             <div class="goal-row">
@@ -247,6 +250,32 @@ function createGoal(name, target, saved, months, color, iconClass) {
     // Explicitly call update visual logic without rewriting to array if possible, OR just normal update
     // Let's rely on normal update for simplicity, it writes to storage again which is redundant but safe.
     updateGoal(index);
+}
+
+function deleteGoal(i) {
+    if (confirm("Are you sure you want to delete this goal?")) {
+        // Remove from array
+        goals.splice(i, 1);
+
+        // Save new state
+        saveGoalsToStorage();
+
+        // Re-render entire list to reset indices
+        renderAllGoals();
+    }
+}
+
+function renderAllGoals() {
+    goalsDiv.innerHTML = "";
+    // Clone array to prevent issues during loop if mutation occurs (though createGoal pushes, so we should clear main array first or handle carefully)
+    const currentGoals = [...goals];
+    goals = []; // creation pushes back to this
+
+    currentGoals.forEach(g => {
+        createGoal(g.name, g.target, g.saved, g.months, g.color, g.iconClass);
+    });
+
+    drawPie();
 }
 
 function drawPie() {
